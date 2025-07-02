@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 JETADMIN_BASE_URL = "https://data.jetadmin.app/projects/fuss/prod/firebase_osx9/models/places/"
 JETADMIN_AUTH_HEADER = {
-    "Authorization": "Bearer Tp60StXsZjOYsQW3V5V2qfFO1AqBUbG6fdZRwCJH"
+     "Authorization": f"Bearer {os.environ.get('JETADMIN_TOKEN')}"
 }
 WEBHOOK_URL = "https://hook.eu1.make.com/co259oby9byycbxnbv5h0j4iqpljiq98"
 
