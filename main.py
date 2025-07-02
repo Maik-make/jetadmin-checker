@@ -48,7 +48,9 @@ def compare_values(val1, val2, field):
     elif field in ["websiteURL", "facebookURL", "instagramURL", "menuURL"]:
         return normalize_url(val1) == normalize_url(val2)
     elif field in ["name", "description", "workingHours"]:
-        return normalize_str(val1.get("en")) == normalize_str(parse_if_json(val2).get("en"))
+        val1_en = val1.get("en") if isinstance(val1, dict) else None
+        val2_en = parse_if_json(val2).get("en") if isinstance(parse_if_json(val2), dict) else None
+        return normalize_str(val1_en) == normalize_str(val2_en)
     elif field == "ratingAggregators":
         return json.dumps(val1, sort_keys=True) == json.dumps(parse_if_json(val2), sort_keys=True)
     elif field == "google_place_id":
