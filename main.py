@@ -96,11 +96,15 @@ def check():
 
         r = requests.get(JETADMIN_BASE_URL + document_id, headers=JETADMIN_AUTH_HEADER)
         if r.status_code != 200:
-            print(f"❌ Не удалось получить данные JetAdmin: {r.status_code}")
+            print(f"🔴 JetAdmin вернул статус {r.status_code} для key={key}, document_id={document_id}")
+            not_found.append({"key": key, "status": "request failed", "document_id": document_id})
             continue
 
         jet_data = r.json()
-        print(f"🟢 JetAdmin данные получены")
+        if not jet_data:
+            print(f"⚪️ Не найдено в JetAdmin: key={key}, document_id={document_id}")
+            not_found.append({"key": key, "status": "place not found", "document_id": document_id})
+            continue
 
         differences_found = False
         updated_entry = {"key": key, "date": today_str}
