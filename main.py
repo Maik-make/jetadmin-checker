@@ -8,11 +8,10 @@ app = Flask(__name__)
 
 JETADMIN_BASE_URL = "https://data.jetadmin.app/projects/fuss/prod/firebase_osx9/models/places/"
 JETADMIN_AUTH_HEADER = {
-     "Authorization": f"Bearer {os.environ.get('JETADMIN_TOKEN')}"
+    "Authorization": f"Bearer {os.environ.get('JETADMIN_TOKEN')}"
 }
 WEBHOOK_URL = "https://hook.eu1.make.com/co259oby9byycbxnbv5h0j4iqpljiq98"
 
-# === Вспомогательные функции ===
 def parse_if_json(value):
     try:
         return json.loads(value) if isinstance(value, str) else value
@@ -78,22 +77,29 @@ def check():
     data = request.get_json()
     today_str = datetime.utcnow().strftime("%Y-%m-%d")
 
+    print(f"🔵 Получено {len(data)} записей")
+
     matched = []
     mismatched = []
 
-    for item in data:
+    for idx, item in enumerate(data):
         document_id = item.get("document_id")
         key = item.get("key")
 
         if not document_id or not key:
+            print(f"⚠️ Пропущен элемент #{idx}: нет document_id или key")
             continue
 
-        # Получаем данные из JetAdmin
+        print(f"\n📄 Проверяем: key={key}, document_id={document_id}")
+
         r = requests.get(JETADMIN_BASE_URL + document_id, headers=JETADMIN_AUTH_HEADER)
         if r.status_code != 200:
+            print(f"❌ Не удалось получить данные JetAdmin: {r.status_code}")
             continue
 
         jet_data = r.json()
+        print(f"🟢 JetAdmin данные получены")
+
         differences_found = False
         updated_entry = {"key": key, "date": today_str}
 
@@ -104,17 +110,20 @@ def check():
             if not compare_values(value1, value2, field):
                 differences_found = True
                 updated_entry[field] = parse_if_json(value2)
+                print(f"⚠️ Отличие в поле '{field}':\n  ▶️ local={value1}\n  ▶️ remote={value2}")
 
         if differences_found:
             mismatched.append(updated_entry)
         else:
             matched.append({"key": key, "date": today_str})
+            print("✅ Запись совпадает")
 
-    # Отправка результатов на вебхук
     payload = {
         "matched": matched,
         "mismatched": mismatched
     }
+
+    print(f"\n📤 Отправка на вебхук: matched={len(matched)}, mismatched={len(mismatched)}")
     requests.post(WEBHOOK_URL, json=payload)
 
     return jsonify({"status": "ok", "matched": len(matched), "mismatched": len(mismatched)})
