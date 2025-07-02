@@ -125,14 +125,21 @@ def check():
             print("✅ Запись совпадает")
 
     payload = {
-        "matched": matched,
-        "mismatched": mismatched
+    "matched": matched,
+    "mismatched": mismatched,
+    "not_found": not_found
     }
+    requests.post(WEBHOOK_URL, json=payload)
 
     print(f"\n📤 Отправка на вебхук: matched={len(matched)}, mismatched={len(mismatched)}")
     requests.post(WEBHOOK_URL, json=payload)
 
-    return jsonify({"status": "ok", "matched": len(matched), "mismatched": len(mismatched)})
+    return jsonify({
+    "status": "ok",
+    "matched": len(matched),
+    "mismatched": len(mismatched),
+    "not_found": len(not_found)
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
